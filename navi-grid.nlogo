@@ -21,7 +21,8 @@ turtles-own
   work      ;; the patch where they work
   house     ;; the patch where they live
   goal      ;; where am I currently headed
-  path      ;; previous patch
+  path      ;; trail of patches per trip
+  trips     ;; number of trips made
 ]
 
 patches-own
@@ -55,7 +56,7 @@ to setup
   ]
   let house-candidates patches with [
     pcolor = 38 and any? neighbors with [ pcolor = white ] and
-    ( pycor = -7 or pycor = -9 ) and pxcor > 4
+    ( pycor = -7 or pycor = -9 ) and ( pxcor > 4 and pxcor < 17 )
   ]
   let work-candidates patches with [
     pcolor = 38 and any? neighbors with [ pcolor = white ] and
@@ -163,6 +164,7 @@ end
 to setup-cars  ;; turtle procedure
   set speed 0
   set wait-time 0
+  set trips 0
   set path no-patches
   put-on-empty-road
   ifelse intersection? [
@@ -205,6 +207,9 @@ to go
     face next-patch ;; car heads towards its goal
     set-car-speed
     fd speed
+    if not member? patch-here path [
+      set path ( patch-set path patch-here )
+    ]
     record-data     ;; record data for plotting
     set-car-color   ;; set color to indicate speed
   ]
@@ -358,15 +363,35 @@ to-report next-patch
   ;; my goal gets set to the patch that is my work
   if goal = house and (member? patch-here [ neighbors4 ] of house) [
     set goal work
+    set path no-patches
+    set trips trips + 1
   ]
   ;; if I am going to work and I am next to the patch that is my work
   ;; my goal gets set to the patch that is my home
   if goal = work and (member? patch-here [ neighbors4 ] of work) [
     set goal house
+    set path no-patches
+    set trips trips + 1
   ]
   ;; CHOICES is an agentset of the candidate patches that the car can
   ;; move to (white patches are roads, green and red patches are lights)
-  let choices neighbors with [ pcolor = white or pcolor = red or pcolor = green ]
+  let choices neighbors with [
+    ( pcolor = white or pcolor = red or pcolor = green ) and
+    ( not member? self [ path ] of myself )
+  ]
+  ;; If it is the first trip of the car and it is going to work, avoid entering the residential road
+  if goal = work and trips = 0 and ( [pycor] of patch-here <= -7 and [pycor] of patch-here >= -9 ) and [pxcor] of patch-here = 18 [
+    set choices choices with [ not ( pxcor > 4 and pxcor < 18 ) ]
+  ]
+  ;; If the car was spawned on the residential road and it is the first trip to work, exit to the main road
+  if goal = work and trips = 0 and ( [pycor] of patch-here = -8 and ( [pxcor] of patch-here > 4 and [pxcor] of patch-here < 18 ) ) [
+    set choices choices with [ pxcor > [ xcor ] of myself ]
+  ]
+  ;; If the car has just gone home and will go back to work, exit to the main road.
+  if goal = work and trips > 0 and ( [pycor] of patch-here = -8 and ( [pxcor] of patch-here > 4 and [pxcor] of patch-here < 18 ) ) [
+    set choices choices with [ pxcor > [ xcor ] of myself ]
+  ]
+  ;;
   if count choices = 2 and heading = 90 [
     set choices choices with [ pxcor > [ xcor ] of myself ]
   ]
@@ -520,7 +545,7 @@ num-cars
 num-cars
 1
 400
-1.0
+10.0
 1
 1
 NIL
@@ -613,7 +638,7 @@ ticks-per-cycle
 ticks-per-cycle
 1
 100
-41.0
+10.0
 1
 1
 NIL
