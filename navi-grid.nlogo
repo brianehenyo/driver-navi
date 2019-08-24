@@ -21,6 +21,7 @@ turtles-own
   work      ;; the patch where they work
   house     ;; the patch where they live
   goal      ;; where am I currently headed
+  path      ;; previous patch
 ]
 
 patches-own
@@ -52,6 +53,14 @@ to setup
   let goal-candidates patches with [
     pcolor = 38 and any? neighbors with [ pcolor = white ]
   ]
+  let house-candidates patches with [
+    pcolor = 38 and any? neighbors with [ pcolor = white ] and
+    ( pycor = -7 or pycor = -9 ) and pxcor > 4
+  ]
+  let work-candidates patches with [
+    pcolor = 38 and any? neighbors with [ pcolor = white ] and
+    not (( pycor = -7 or pycor = -9 ) and pxcor > 4)
+  ]
   ask one-of intersections [ become-current ]
 
   set-default-shape turtles "car"
@@ -73,9 +82,9 @@ to setup
     set-car-color ;; slower turtles are blue, faster ones are colored cyan
     record-data
     ;; choose at random a location for the house
-    set house one-of goal-candidates
+    set house one-of house-candidates
     ;; choose at random a location for work, make sure work is not located at same location as house
-    set work one-of goal-candidates with [ self != [ house ] of myself ]
+    set work one-of work-candidates ;; goal-candidates with [ self != [ house ] of myself ]
     set goal work
   ]
 
@@ -129,7 +138,8 @@ to setup-patches
     (pxcor = -6 and pycor = 9) or
     (pxcor = 18 and pycor = 0) or
     (pxcor = 18 and pycor = 9) or
-    (pxcor = -6 and pycor = -18)
+    (pxcor = -6 and pycor = -18) or
+    (pxcor = 18 and pycor = -8)
   ]
 
   ask roads [ set pcolor white ]
@@ -153,6 +163,7 @@ end
 to setup-cars  ;; turtle procedure
   set speed 0
   set wait-time 0
+  set path no-patches
   put-on-empty-road
   ifelse intersection? [
     ifelse random 2 = 0
@@ -356,6 +367,18 @@ to-report next-patch
   ;; CHOICES is an agentset of the candidate patches that the car can
   ;; move to (white patches are roads, green and red patches are lights)
   let choices neighbors with [ pcolor = white or pcolor = red or pcolor = green ]
+  if count choices = 2 and heading = 90 [
+    set choices choices with [ pxcor > [ xcor ] of myself ]
+  ]
+  if count choices = 2 and heading = 270 [
+    set choices choices with [ pxcor < [ xcor ] of myself ]
+  ]
+  if count choices = 2 and heading = 0 [
+    set choices choices with [ pycor > [ ycor ] of myself ]
+  ]
+  if count choices = 2 and heading = 180 [
+    set choices choices with [ pycor < [ ycor ] of myself ]
+  ]
   ;; choose the patch closest to the goal, this is the patch the car will move to
   let choice min-one-of choices [ distance [ goal ] of myself ]
   ;; report the chosen patch
@@ -590,7 +613,7 @@ ticks-per-cycle
 ticks-per-cycle
 1
 100
-50.0
+41.0
 1
 1
 NIL
