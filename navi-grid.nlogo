@@ -148,8 +148,8 @@ to setup-patches
     (pxcor = -6 and pycor = 9) or
     (pxcor = 18 and pycor = 0) or
     (pxcor = 18 and pycor = 9) or
-    (pxcor = -6 and pycor = -18) or
-    (pxcor = 18 and pycor = -8)
+    (pxcor = -6 and pycor = -18) ;;or
+;    (pxcor = 18 and pycor = -8)
   ]
 
   ask roads [ set pcolor white ]
@@ -439,7 +439,7 @@ to-report next-patch
     set choices choices with [ pxcor > [[ pxcor ] of patch-here] of myself ]
   ]
   ;; If the car has just gone home and will go back to work, exit to the main road.
-  if goal = work and trips > 0 and ( [pycor] of patch-here = ycor-residential and ( [pxcor] of patch-here >= min-xcor-residential and [pxcor] of patch-here < max-xcor-residential + 2 ) ) [
+  if goal = work and trips > 0 and ( ( [pycor] of patch-here <= ycor-residential + 1 and [pycor] of patch-here >= ycor-residential - 1 ) and ( [pxcor] of patch-here >= min-xcor-residential and [pxcor] of patch-here < max-xcor-residential + 2 ) ) [
     set choices choices with [ pxcor > [[ pxcor ] of patch-here] of myself ];;[ xcor ] of myself ]
   ]
   ;; If the car has already chosen a direction, continue towards that direction.
@@ -598,7 +598,7 @@ num-cars
 num-cars
 1
 400
-38.0
+115.0
 1
 1
 NIL
@@ -665,7 +665,7 @@ speed-limit
 speed-limit
 0.1
 1
-0.5
+0.2
 0.1
 1
 NIL
@@ -691,7 +691,7 @@ ticks-per-cycle
 ticks-per-cycle
 1
 100
-30.0
+100.0
 1
 1
 NIL
@@ -827,10 +827,10 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-530
-250
-690
-268
+720
+320
+885
+338
 Subdivision Drive
 9
 3.0
@@ -857,10 +857,10 @@ Circumferential Road
 1
 
 TEXTBOX
-525
-175
-695
-193
+735
+180
+905
+198
 Rand Street
 9
 2.0
