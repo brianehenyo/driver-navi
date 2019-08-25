@@ -51,9 +51,6 @@ to setup
 
   ;; Make an agentset of all patches where there can be a house or road
   ;; those patches with the background color shade of brown and next to a road
-  let goal-candidates patches with [
-    pcolor = 38 and any? neighbors with [ pcolor = white ]
-  ]
   let house-candidates patches with [
     pcolor = 38 and any? neighbors with [ pcolor = white ] and
     ( pycor = -7 or pycor = -9 ) and ( pxcor > 4 and pxcor < 17 )
@@ -201,10 +198,41 @@ to go
   set-signals
   set num-cars-stopped 0
 
+  if count turtles < num-cars [
+    ;; Make an agentset of all patches where there can be a house or road
+    ;; those patches with the background color shade of brown and next to a road
+    let house-candidates patches with [
+      pcolor = 38 and any? neighbors with [ pcolor = white ] and
+      ( pycor = -7 or pycor = -9 ) and ( pxcor > 4 and pxcor < 17 )
+    ]
+    let work-candidates patches with [
+      pcolor = 38 and any? neighbors with [ pcolor = white ] and
+      not (( pycor = -7 or pycor = -9 ) and pxcor > 4)
+    ]
+
+    ;; Now create the cars and have each created car call the functions setup-cars and set-car-color
+    create-turtles ( num-cars - count turtles ) [
+      setup-cars
+      set-car-color ;; slower turtles are blue, faster ones are colored cyan
+      record-data
+      ;; choose at random a location for the house
+      set house one-of house-candidates
+      ;; choose at random a location for work, make sure work is not located at same location as house
+      set work one-of work-candidates ;; goal-candidates with [ self != [ house ] of myself ]
+      set goal work
+    ]
+
+    ;; give the turtles an initial speed
+    ask turtles [ set-car-speed ]
+  ]
+
   ;; set the cars’ speed, move them forward their speed, record data for plotting,
   ;; and set the color of the cars to an appropriate color based on their speed
   ask turtles [
     face next-patch ;; car heads towards its goal
+    if (trips mod 2 = 0) and (trips / 2 = max-round-trips) [
+      die
+    ]
     set-car-speed
     fd speed
     if not member? patch-here path [
