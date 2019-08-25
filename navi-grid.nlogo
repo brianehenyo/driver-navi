@@ -51,6 +51,7 @@ to setup
 
   ;; Make an agentset of all patches where there can be a house or road
   ;; those patches with the background color shade of brown and next to a road
+  ;; House patches can only be near Subdivision Drive.
   let house-candidates patches with [
     pcolor = 38 and any? neighbors with [ pcolor = white ] and
     ( pycor = -7 or pycor = -9 ) and ( pxcor > 4 and pxcor < 17 )
@@ -201,6 +202,7 @@ to go
   if count turtles < num-cars [
     ;; Make an agentset of all patches where there can be a house or road
     ;; those patches with the background color shade of brown and next to a road
+    ;; House patches can only be near Subdivision Drive.
     let house-candidates patches with [
       pcolor = 38 and any? neighbors with [ pcolor = white ] and
       ( pycor = -7 or pycor = -9 ) and ( pxcor > 4 and pxcor < 17 )
@@ -229,7 +231,11 @@ to go
   ;; set the cars’ speed, move them forward their speed, record data for plotting,
   ;; and set the color of the cars to an appropriate color based on their speed
   ask turtles [
-    face next-patch ;; car heads towards its goal
+    carefully [
+      face next-patch ;; car heads towards its goal
+    ] [
+      die
+    ]
     if (trips mod 2 = 0) and (trips / 2 = max-round-trips) [
       die
     ]
@@ -413,26 +419,26 @@ to-report next-patch
   ]
   ;; If the car was spawned on the residential road and it is the first trip to work, exit to the main road
   if goal = work and trips = 0 and ( [pycor] of patch-here = -8 and ( [pxcor] of patch-here > 4 and [pxcor] of patch-here < 18 ) ) [
-    set choices choices with [ pxcor > [ xcor ] of myself ]
+    set choices choices with [ pxcor > [[ pxcor ] of patch-here] of myself ]
   ]
   ;; If the car has just gone home and will go back to work, exit to the main road.
   if goal = work and trips > 0 and ( [pycor] of patch-here = -8 and ( [pxcor] of patch-here > 4 and [pxcor] of patch-here < 18 ) ) [
-    set choices choices with [ pxcor > [ xcor ] of myself ]
+    set choices choices with [ pxcor > [[ pxcor ] of patch-here] of myself ];;[ xcor ] of myself ]
   ]
   ;; If the car has already chosen a direction, continue towards that direction.
   ;; This fixes the jittering behavior in the original model when neighbor patches are
   ;; equally near the goal.
   if count choices = 2 and heading = 90 [
-    set choices choices with [ pxcor > [ xcor ] of myself ]
+    set choices choices with [ pxcor > [[ pxcor ] of patch-here] of myself ]
   ]
   if count choices = 2 and heading = 270 [
-    set choices choices with [ pxcor < [ xcor ] of myself ]
+    set choices choices with [ pxcor < [[ pxcor ] of patch-here] of myself ]
   ]
   if count choices = 2 and heading = 0 [
-    set choices choices with [ pycor > [ ycor ] of myself ]
+    set choices choices with [ pycor > [[ pycor ] of patch-here] of myself ]
   ]
   if count choices = 2 and heading = 180 [
-    set choices choices with [ pycor < [ ycor ] of myself ]
+    set choices choices with [ pycor < [[ pycor ] of patch-here] of myself ]
   ]
   ;; choose the patch closest to the goal, this is the patch the car will move to
   let choice min-one-of choices [ distance [ goal ] of myself ]
@@ -802,6 +808,56 @@ max-round-trips
 1
 NIL
 HORIZONTAL
+
+TEXTBOX
+555
+245
+680
+263
+Subdivision Drive
+9
+3.0
+1
+
+TEXTBOX
+500
+335
+695
+353
+Circumferential Road
+9
+3.0
+1
+
+TEXTBOX
+445
+10
+690
+28
+Circumferential Road
+9
+3.0
+1
+
+TEXTBOX
+525
+175
+695
+193
+Rand Street
+9
+2.0
+1
+
+TEXTBOX
+510
+95
+700
+113
+Wilensky Street
+9
+3.0
+1
 
 @#$#@#$#@
 ## ACKNOWLEDGMENT
