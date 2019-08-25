@@ -1,3 +1,5 @@
+extensions [array table]
+
 globals
 [
   grid-x-inc               ;; the amount of patches in between two roads in the x direction
@@ -16,6 +18,10 @@ globals
   min-xcor-residential     ;; minimum pxcor of Subdivision Road
   max-xcor-residential     ;; maximum pxcor of Subdivision Road
   ycor-residential         ;; pycor of Subdivision Road
+
+  ;; suggestions
+  suggestions-house
+  suggestions-work
 ]
 
 turtles-own
@@ -30,6 +36,7 @@ turtles-own
   trips               ;; number of trips made
   curr-travel-time    ;; travel time of ongoing trip
   max-travel-time     ;; longest travel time recorded
+  assisted?           ;; true if car driver is assisted by a navigation app
 ]
 
 patches-own
@@ -85,7 +92,7 @@ to setup
   ;; Now create the cars and have each created car call the functions setup-cars and set-car-color
   create-turtles num-cars [
     setup-cars
-    set-car-color ;; slower turtles are blue, faster ones are colored cyan
+;    set-car-color ;; slower turtles are blue, faster ones are colored cyan
     record-data
     ;; choose at random a location for the house
     set house one-of house-candidates
@@ -94,10 +101,17 @@ to setup
     ask house [ set pcolor yellow ] ;; color the house patch yellow
     ask work [ set pcolor orange ]  ;; color the work patch orange
     set goal work
+    set color blue
   ]
 
   ;; give the turtles an initial speed
   ask turtles [ set-car-speed ]
+
+  ;; randomly select cars with assistance
+  ask n-of (assisted * num-cars) turtles [
+    set assisted? true
+    set color pink
+  ]
 
   reset-ticks
 end
@@ -108,9 +122,14 @@ to setup-globals
   set phase 0
   set num-cars-stopped 0
 
+  ;; set coordinates for the Subdivision Road
   set min-xcor-residential 0
   set max-xcor-residential 16
   set ycor-residential -8
+
+  ;; set suggested roads per selection
+  set suggestions-house table:make
+  table:put suggestions-house "Rand Street" patch 0 0
 
   ;; don't make acceleration 0.1 since we could get a rounding error and end up on a patch boundary
   set acceleration 0.099
@@ -179,6 +198,7 @@ to setup-cars  ;; turtle procedure
   set curr-travel-time 0
   set max-travel-time 0
   set path no-patches
+  set assisted? false
   put-on-empty-road
   ifelse intersection? [
     ifelse random 2 = 0
@@ -228,19 +248,28 @@ to go
     ]
 
     ;; Now create the cars and have each created car call the functions setup-cars and set-car-color
-    create-turtles ( num-cars - count turtles ) [
+    let deficit ( num-cars - count turtles )
+    create-turtles deficit [
       setup-cars
-      set-car-color ;; slower turtles are blue, faster ones are colored cyan
+;      set-car-color ;; slower turtles are blue, faster ones are colored cyan
       record-data
       ;; choose at random a location for the house
       set house one-of house-candidates
       ;; choose at random a location for work, make sure work is not located at same location as house
       set work one-of work-candidates ;; goal-candidates with [ self != [ house ] of myself ]
       set goal work
+      set color blue
     ]
 
     ;; give the turtles an initial speed
     ask turtles [ set-car-speed ]
+
+    ;; randomly select cars with assistance
+    let need-assisted ((assisted * num-cars) - count turtles with [assisted? = true])
+    ask n-of need-assisted turtles with [ assisted? = false ] [
+      set assisted? true
+      set color pink
+    ]
   ]
 
   ;; set the cars’ speed, move them forward their speed, record data for plotting,
@@ -257,7 +286,7 @@ to go
       ]
       set curr-travel-time curr-travel-time + 1
       record-data     ;; record data for plotting
-      set-car-color   ;; set color to indicate speed
+;      set-car-color   ;; set color to indicate speed
     ] [
       die
     ]
@@ -533,10 +562,10 @@ end
 ; See Info tab for full copyright and license.
 @#$#@#$#@
 GRAPHICS-WINDOW
-327
-10
-668
-352
+320
+15
+661
+357
 -1
 -1
 9.0
@@ -560,10 +589,10 @@ ticks
 30.0
 
 PLOT
-453
-377
-671
-552
+445
+370
+663
+545
 Average Wait Time of Cars
 Time
 Average Wait
@@ -575,13 +604,13 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot mean [wait-time] of turtles"
+"default" 1.0 0 -955883 true "" "plot mean [wait-time] of turtles"
 
 PLOT
-228
-377
-444
-552
+230
+370
+446
+545
 Average Speed of Cars
 Time
 Average Speed
@@ -593,13 +622,13 @@ true
 false
 "set-plot-y-range 0 speed-limit" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot mean [speed] of turtles"
+"default" 1.0 0 -13791810 true "" "plot mean [speed] of turtles"
 
 SWITCH
-160
-160
-305
-193
+165
+155
+310
+188
 power?
 power?
 0
@@ -607,25 +636,25 @@ power?
 -1000
 
 SLIDER
-10
-10
-155
-43
+15
+35
+160
+68
 num-cars
 num-cars
 1
 400
-10.0
+32.0
 1
 1
 NIL
 HORIZONTAL
 
 PLOT
-5
-376
-219
-551
+15
+370
+230
+545
 Stopped Cars
 Time
 Stopped Cars
@@ -637,13 +666,13 @@ true
 false
 "set-plot-y-range 0 num-cars" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot num-cars-stopped"
+"default" 1.0 0 -8053223 true "" "plot num-cars-stopped"
 
 BUTTON
-160
-45
-305
-78
+165
+70
+310
+103
 Go
 go
 T
@@ -657,10 +686,10 @@ NIL
 0
 
 BUTTON
-160
-10
-305
-43
+165
+35
+310
+68
 Setup
 setup
 NIL
@@ -674,10 +703,10 @@ NIL
 1
 
 SLIDER
-10
-45
-155
-78
+15
+70
+160
+103
 speed-limit
 speed-limit
 0.1
@@ -689,10 +718,10 @@ NIL
 HORIZONTAL
 
 MONITOR
-10
-180
-155
-225
+15
+175
+160
+220
 Current Phase
 phase
 3
@@ -700,10 +729,10 @@ phase
 11
 
 SLIDER
-160
-195
-305
-228
+165
+190
+310
+223
 ticks-per-cycle
 ticks-per-cycle
 1
@@ -715,10 +744,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-160
-230
-305
-263
+165
+225
+310
+258
 current-phase
 current-phase
 0
@@ -730,10 +759,10 @@ current-phase
 HORIZONTAL
 
 BUTTON
-10
-265
-155
-298
+15
+260
+160
+293
 Change light
 change-light-at-current-intersection
 NIL
@@ -747,10 +776,10 @@ NIL
 0
 
 SWITCH
-10
-230
-155
-263
+15
+225
+160
+258
 current-auto?
 current-auto?
 0
@@ -758,10 +787,10 @@ current-auto?
 -1000
 
 BUTTON
-160
-265
-305
-298
+165
+260
+310
+293
 Select intersection
 choose-current
 T
@@ -775,10 +804,10 @@ NIL
 0
 
 BUTTON
-10
-330
-155
-363
+15
+325
+160
+358
 Random Select
 watch-a-car
 NIL
@@ -792,10 +821,10 @@ NIL
 0
 
 BUTTON
-160
-330
-305
-363
+165
+325
+310
+358
 Stop Following
 stop-watching
 NIL
@@ -809,95 +838,95 @@ NIL
 0
 
 TEXTBOX
-10
-310
-160
-328
+15
+305
+165
+323
 Observe and Follow a Car
 12
 15.0
 1
 
 TEXTBOX
-10
-160
-160
-178
+15
+155
+165
+173
 Traffic Light Controls
 12
 15.0
 1
 
 SLIDER
-10
-80
-155
-113
+15
+105
+160
+138
 max-round-trips
 max-round-trips
 1
 10
-5.0
+3.0
 1
 1
 NIL
 HORIZONTAL
 
 TEXTBOX
-530
-245
-695
-263
+523
+250
+688
+268
 Subdivision Drive
 9
 3.0
 1
 
 TEXTBOX
-500
-335
-695
-353
+493
+340
+688
+358
 Circumferential Road
 9
 3.0
 1
 
 TEXTBOX
-445
-15
-690
-33
+438
+20
+683
+38
 Circumferential Road
 9
 3.0
 1
 
 TEXTBOX
-525
-175
-695
-193
+518
+180
+688
+198
 Rand Street
 9
 2.0
 1
 
 TEXTBOX
-510
-95
-700
-113
+503
+100
+693
+118
 Wilensky Street
 9
 3.0
 1
 
 SLIDER
-160
-80
-305
-113
+165
+105
+310
+138
 assisted
 assisted
 0
@@ -909,11 +938,11 @@ NIL
 HORIZONTAL
 
 PLOT
-675
-10
-1030
-210
-Average Maximum Travel Time of Cars
+680
+15
+1035
+215
+Average Maximum Travel Time of ALL Cars
 Time
 Ave Max Travel Time
 0.0
@@ -925,6 +954,26 @@ false
 "" ""
 PENS
 "default" 1.0 0 -13840069 true "" "plot mean [max-travel-time] of turtles"
+
+TEXTBOX
+15
+10
+320
+46
+Navigation Application-Assisted Drivers
+15
+95.0
+1
+
+CHOOSER
+680
+225
+897
+270
+app-suggestion
+app-suggestion
+"Rand Street" "Wilensky Street" "Circumferential Road North" "Circumferential Road South"
+1
 
 @#$#@#$#@
 ## ACKNOWLEDGMENT
