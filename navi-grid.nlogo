@@ -311,16 +311,22 @@ to set-signal-colors  ;; intersection (patch) procedure
   ifelse power? [
     ifelse green-light-up? [
       ask patch-at -1 0 [ set pcolor red ]
+      carefully [ ask patch-at 1 0 [ set pcolor red ] ] []
       ask patch-at 0 1 [ set pcolor green ]
+      carefully [ ask patch-at 0 -1 [ set pcolor green ] ] []
     ]
     [
       ask patch-at -1 0 [ set pcolor green ]
+      carefully [ ask patch-at 1 0 [ set pcolor green ] ] []
       ask patch-at 0 1 [ set pcolor red ]
+      carefully [ ask patch-at 0 -1 [ set pcolor red ] ] []
     ]
   ]
   [
     ask patch-at -1 0 [ set pcolor white ]
+    carefully [ ask patch-at 1 0 [ set pcolor white ] ] []
     ask patch-at 0 1 [ set pcolor white ]
+    carefully [ ask patch-at 0 -1 [ set pcolor white ] ] []
   ]
 end
 
