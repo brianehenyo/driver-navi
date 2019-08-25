@@ -20,8 +20,8 @@ globals
   ycor-residential         ;; pycor of Subdivision Road
 
   ;; suggestions
-  suggestions-house
-  suggestions-work
+  suggestion-house
+  suggestion-work
 ]
 
 turtles-own
@@ -37,6 +37,7 @@ turtles-own
   curr-travel-time    ;; travel time of ongoing trip
   max-travel-time     ;; longest travel time recorded
   assisted?           ;; true if car driver is assisted by a navigation app
+  done-with-suggest?
 ]
 
 patches-own
@@ -110,6 +111,7 @@ to setup
   ;; randomly select cars with assistance
   ask n-of (assisted * num-cars) turtles [
     set assisted? true
+    set done-with-suggest? false
     set color pink
   ]
 
@@ -128,8 +130,34 @@ to setup-globals
   set ycor-residential -8
 
   ;; set suggested roads per selection
-  set suggestions-house table:make
-  table:put suggestions-house "Rand Street" patch 0 0
+;  set suggestions-house table:make
+;  table:put suggestions-house "Rand Street" patch -6 0
+;  table:put suggestions-house "Wilensky Street" patch -6 9
+;  table:put suggestions-house "Circumferential Road North" patch -6 18
+;  table:put suggestions-house "Circumferential Road South" patch -6 -18
+;
+;  set suggestions-work table:make
+;  table:put suggestions-house "Rand Street" patch 18 0
+;  table:put suggestions-house "Wilensky Street" patch 18 9
+;  table:put suggestions-house "Circumferential Road North" patch 18 18
+;  table:put suggestions-house "Circumferential Road South" patch 18 -18
+
+  if app-suggestion = "Rand Street" [
+    set suggestion-house patch 5 0 ;;-5 0
+    set suggestion-work patch 5 0 ;;17 0
+  ]
+  if app-suggestion = "Wilensky Street" [
+    set suggestion-house patch 5 9 ;;-5 9
+    set suggestion-work patch 5 9 ;;17 9
+  ]
+  if app-suggestion = "Circumferential Road North" [
+    set suggestion-house patch -5 18
+    set suggestion-work patch 17 18
+  ]
+  if app-suggestion = "Circumferential Road South" [
+    set suggestion-house patch -5 -18
+    set suggestion-work patch 17 -18
+  ]
 
   ;; don't make acceleration 0.1 since we could get a rounding error and end up on a patch boundary
   set acceleration 0.099
@@ -268,6 +296,7 @@ to go
     let need-assisted ((assisted * num-cars) - count turtles with [assisted? = true])
     ask n-of need-assisted turtles with [ assisted? = false ] [
       set assisted? true
+      set done-with-suggest? false
       set color pink
     ]
   ]
@@ -456,6 +485,7 @@ to-report next-patch
       set max-travel-time max ( list max-travel-time curr-travel-time )
     ]
     set curr-travel-time 0
+    if assisted? [ set done-with-suggest? false ]
   ]
   ;; if I am going to work and I am next to the patch that is my work
   ;; my goal gets set to the patch that is my home
@@ -469,7 +499,16 @@ to-report next-patch
       set max-travel-time max ( list max-travel-time curr-travel-time )
     ]
     set curr-travel-time 0
+    if assisted? [ set done-with-suggest? false ]
   ]
+
+  if assisted? and done-with-suggest? = false and goal = house and patch-here = suggestion-house [
+    set done-with-suggest? true
+  ]
+  if assisted? and done-with-suggest? = false and goal = work and patch-here = suggestion-work [
+    set done-with-suggest? true
+  ]
+
   ;; CHOICES is an agentset of the candidate patches that the car can
   ;; move to (white patches are roads, green and red patches are lights)
   let choices neighbors with [
@@ -503,10 +542,32 @@ to-report next-patch
   if count choices = 2 and heading = 180 [
     set choices choices with [ pycor < [[ pycor ] of patch-here] of myself ]
   ]
-  ;; choose the patch closest to the goal, this is the patch the car will move to
-  let choice min-one-of choices [ distance [ goal ] of myself ]
-  ;; report the chosen patch
-  report choice
+
+  ifelse assisted? [
+    ifelse done-with-suggest? [
+      ;; choose the patch closest to the goal, this is the patch the car will move to
+      let choice min-one-of choices [ distance [ goal ] of myself ]
+      ;; report the chosen patch
+      report choice
+    ] [
+      ;; choose the patch closest to the suggested road, this is the patch the car will move to
+      if goal = house [
+        let choice min-one-of choices [ distance suggestion-house ]
+        ;; report the chosen patch
+        report choice
+      ]
+      if goal = work [
+        let choice min-one-of choices [ distance suggestion-work ]
+        ;; report the chosen patch
+        report choice
+      ]
+    ]
+  ] [
+    ;; choose the patch closest to the goal, this is the patch the car will move to
+    let choice min-one-of choices [ distance [ goal ] of myself ]
+    ;; report the chosen patch
+    report choice
+  ]
 end
 
 to watch-a-car
@@ -590,9 +651,9 @@ ticks
 
 PLOT
 445
-370
-663
-545
+365
+660
+540
 Average Wait Time of Cars
 Time
 Average Wait
@@ -608,9 +669,9 @@ PENS
 
 PLOT
 230
-370
+365
 446
-545
+540
 Average Speed of Cars
 Time
 Average Speed
@@ -644,7 +705,7 @@ num-cars
 num-cars
 1
 400
-32.0
+99.0
 1
 1
 NIL
@@ -652,9 +713,9 @@ HORIZONTAL
 
 PLOT
 15
-370
+365
 230
-545
+540
 Stopped Cars
 Time
 Stopped Cars
@@ -711,7 +772,7 @@ speed-limit
 speed-limit
 0.1
 1
-0.6
+0.3
 0.1
 1
 NIL
@@ -737,7 +798,7 @@ ticks-per-cycle
 ticks-per-cycle
 1
 100
-44.0
+39.0
 1
 1
 NIL
@@ -931,17 +992,17 @@ assisted
 assisted
 0
 1
-0.5
+0.8
 .1
 1
 NIL
 HORIZONTAL
 
 PLOT
-680
+1025
 15
-1035
-215
+1290
+420
 Average Maximum Travel Time of ALL Cars
 Time
 Ave Max Travel Time
@@ -966,14 +1027,61 @@ Navigation Application-Assisted Drivers
 1
 
 CHOOSER
-680
-225
-897
-270
+665
+15
+882
+60
 app-suggestion
 app-suggestion
 "Rand Street" "Wilensky Street" "Circumferential Road North" "Circumferential Road South"
+0
+
+MONITOR
+880
+15
+1025
+60
+Cars with Navigation
+count turtles with [ assisted? ]
+0
 1
+11
+
+PLOT
+665
+60
+1025
+240
+Average Maximum Travel Time of ASSISTED Cars
+Time
+AAve Max Travel Time
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -2064490 true "" "plot mean [max-travel-time] of turtles with [assisted?]"
+
+PLOT
+665
+240
+1025
+420
+Average Maximum Travel Time of NON-ASSISTED Card
+Time
+Ave Max Travel Time
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -13791810 true "" "plot mean [max-travel-time] of turtles with [assisted? = false]"
 
 @#$#@#$#@
 ## ACKNOWLEDGMENT
