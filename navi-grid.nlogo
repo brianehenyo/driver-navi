@@ -391,7 +391,9 @@ to-report next-patch
   if goal = work and trips > 0 and ( [pycor] of patch-here = -8 and ( [pxcor] of patch-here > 4 and [pxcor] of patch-here < 18 ) ) [
     set choices choices with [ pxcor > [ xcor ] of myself ]
   ]
-  ;;
+  ;; If the car has already chosen a direction, continue towards that direction.
+  ;; This fixes the jittering behavior in the original model when neighbor patches are
+  ;; equally near the goal.
   if count choices = 2 and heading = 90 [
     set choices choices with [ pxcor > [ xcor ] of myself ]
   ]
@@ -526,10 +528,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot mean [speed] of turtles"
 
 SWITCH
-10
-85
-155
-118
+160
+160
+305
+193
 power?
 power?
 0
@@ -538,9 +540,9 @@ power?
 
 SLIDER
 10
-45
-205
-78
+10
+155
+43
 num-cars
 num-cars
 1
@@ -570,7 +572,7 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot num-cars-stopped"
 
 BUTTON
-220
+160
 45
 305
 78
@@ -587,9 +589,9 @@ NIL
 0
 
 BUTTON
-220
+160
 10
-304
+305
 43
 Setup
 setup
@@ -605,9 +607,9 @@ NIL
 
 SLIDER
 10
-165
+45
 155
-198
+78
 speed-limit
 speed-limit
 0.1
@@ -619,10 +621,10 @@ NIL
 HORIZONTAL
 
 MONITOR
-185
-125
-290
-170
+10
+180
+155
+225
 Current Phase
 phase
 3
@@ -630,10 +632,10 @@ phase
 11
 
 SLIDER
-10
-130
-155
-163
+160
+195
+305
+228
 ticks-per-cycle
 ticks-per-cycle
 1
@@ -646,9 +648,9 @@ HORIZONTAL
 
 SLIDER
 160
-225
+230
 305
-258
+263
 current-phase
 current-phase
 0
@@ -660,9 +662,9 @@ current-phase
 HORIZONTAL
 
 BUTTON
-9
+10
 265
-154
+155
 298
 Change light
 change-light-at-current-intersection
@@ -677,10 +679,10 @@ NIL
 0
 
 SWITCH
-9
-225
-154
-258
+10
+230
+155
+263
 current-auto?
 current-auto?
 0
@@ -688,9 +690,9 @@ current-auto?
 -1000
 
 BUTTON
-159
+160
 265
-304
+305
 298
 Select intersection
 choose-current
@@ -709,7 +711,7 @@ BUTTON
 330
 155
 363
-watch a car
+Random Select
 watch-a-car
 NIL
 1
@@ -726,7 +728,7 @@ BUTTON
 330
 305
 363
-stop watching
+Stop Following
 stop-watching
 NIL
 1
@@ -737,6 +739,41 @@ NIL
 NIL
 NIL
 0
+
+TEXTBOX
+10
+310
+160
+328
+Observe and Follow a Car
+12
+15.0
+1
+
+TEXTBOX
+10
+160
+160
+178
+Traffic Light Controls
+12
+15.0
+1
+
+SLIDER
+10
+80
+155
+113
+max-round-trips
+max-round-trips
+1
+10
+5.0
+1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## ACKNOWLEDGMENT
