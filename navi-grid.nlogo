@@ -20,14 +20,16 @@ globals
 
 turtles-own
 [
-  speed     ;; the speed of the turtle
-  up-car?   ;; true if the turtle moves downwards and false if it moves to the right
-  wait-time ;; the amount of time since the last time a turtle has moved
-  work      ;; the patch where they work
-  house     ;; the patch where they live
-  goal      ;; where am I currently headed
-  path      ;; trail of patches per trip
-  trips     ;; number of trips made
+  speed               ;; the speed of the turtle
+  up-car?             ;; true if the turtle moves downwards and false if it moves to the right
+  wait-time           ;; the amount of time since the last time a turtle has moved
+  work                ;; the patch where they work
+  house               ;; the patch where they live
+  goal                ;; where am I currently headed
+  path                ;; trail of patches per trip
+  trips               ;; number of trips made
+  curr-travel-time    ;; travel time of ongoing trip
+  max-travel-time     ;; longest travel time recorded
 ]
 
 patches-own
@@ -174,6 +176,8 @@ to setup-cars  ;; turtle procedure
   set speed 0
   set wait-time 0
   set trips 0
+  set curr-travel-time 0
+  set max-travel-time 0
   set path no-patches
   put-on-empty-road
   ifelse intersection? [
@@ -251,6 +255,7 @@ to go
       if not member? patch-here path [
         set path ( patch-set path patch-here )
       ]
+      set curr-travel-time curr-travel-time + 1
       record-data     ;; record data for plotting
       set-car-color   ;; set color to indicate speed
     ] [
@@ -416,6 +421,12 @@ to-report next-patch
     set goal work
     set path no-patches
     set trips trips + 1
+    ifelse max-travel-time = 0 [
+      set max-travel-time curr-travel-time
+    ] [
+      set max-travel-time max ( list max-travel-time curr-travel-time )
+    ]
+    set curr-travel-time 0
   ]
   ;; if I am going to work and I am next to the patch that is my work
   ;; my goal gets set to the patch that is my home
@@ -423,6 +434,12 @@ to-report next-patch
     set goal house
     set path no-patches
     set trips trips + 1
+    ifelse max-travel-time = 0 [
+      set max-travel-time curr-travel-time
+    ] [
+      set max-travel-time max ( list max-travel-time curr-travel-time )
+    ]
+    set curr-travel-time 0
   ]
   ;; CHOICES is an agentset of the candidate patches that the car can
   ;; move to (white patches are roads, green and red patches are lights)
@@ -598,7 +615,7 @@ num-cars
 num-cars
 1
 400
-115.0
+10.0
 1
 1
 NIL
@@ -665,7 +682,7 @@ speed-limit
 speed-limit
 0.1
 1
-0.2
+0.6
 0.1
 1
 NIL
@@ -691,7 +708,7 @@ ticks-per-cycle
 ticks-per-cycle
 1
 100
-100.0
+44.0
 1
 1
 NIL
@@ -827,10 +844,10 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-720
-320
-885
-338
+530
+245
+695
+263
 Subdivision Drive
 9
 3.0
@@ -857,10 +874,10 @@ Circumferential Road
 1
 
 TEXTBOX
-735
-180
-905
-198
+525
+175
+695
+193
 Rand Street
 9
 2.0
@@ -875,6 +892,39 @@ Wilensky Street
 9
 3.0
 1
+
+SLIDER
+160
+80
+305
+113
+assisted
+assisted
+0
+1
+0.5
+.1
+1
+NIL
+HORIZONTAL
+
+PLOT
+675
+10
+1030
+210
+Average Maximum Travel Time of Cars
+Time
+Ave Max Travel Time
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -13840069 true "" "plot mean [max-travel-time] of turtles"
 
 @#$#@#$#@
 ## ACKNOWLEDGMENT
