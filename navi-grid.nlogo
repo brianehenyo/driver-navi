@@ -274,10 +274,6 @@ to become-current ;; patch procedure
   set current-intersection self
   set current-phase my-phase
   set current-auto? auto?
-  ask patch-at -1 1 [
-    set plabel-color black
-    set plabel "current"
-  ]
 end
 
 ;; update the variables for the current intersection
