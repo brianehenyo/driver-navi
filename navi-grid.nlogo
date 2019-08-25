@@ -9,8 +9,13 @@ globals
   current-intersection     ;; the currently selected intersection
 
   ;; patch agentsets
-  intersections ;; agentset containing the patches that are intersections
-  roads         ;; agentset containing the patches that are roads
+  intersections            ;; agentset containing the patches that are intersections
+  roads                    ;; agentset containing the patches that are roads
+
+  ;; length of residential area
+  min-xcor-residential     ;; minimum pxcor of Subdivision Road
+  max-xcor-residential     ;; maximum pxcor of Subdivision Road
+  ycor-residential         ;; pycor of Subdivision Road
 ]
 
 turtles-own
@@ -54,11 +59,11 @@ to setup
   ;; House patches can only be near Subdivision Drive.
   let house-candidates patches with [
     pcolor = 38 and any? neighbors with [ pcolor = white ] and
-    ( pycor = -7 or pycor = -9 ) and ( pxcor > 4 and pxcor < 17 )
+    ( pycor = ycor-residential + 1 or pycor = ycor-residential - 1 ) and ( pxcor >= min-xcor-residential and pxcor <= max-xcor-residential )
   ]
   let work-candidates patches with [
     pcolor = 38 and any? neighbors with [ pcolor = white ] and
-    not (( pycor = -7 or pycor = -9 ) and pxcor > 4)
+    ( pycor > 0 or pxcor < -6 )
   ]
   ask one-of intersections [ become-current ]
 
@@ -84,6 +89,8 @@ to setup
     set house one-of house-candidates
     ;; choose at random a location for work, make sure work is not located at same location as house
     set work one-of work-candidates ;; goal-candidates with [ self != [ house ] of myself ]
+    ask house [ set pcolor yellow ] ;; color the house patch yellow
+    ask work [ set pcolor orange ]  ;; color the work patch orange
     set goal work
   ]
 
@@ -98,6 +105,10 @@ to setup-globals
   set current-intersection nobody ;; just for now, since there are no intersections yet
   set phase 0
   set num-cars-stopped 0
+
+  set min-xcor-residential 0
+  set max-xcor-residential 16
+  set ycor-residential -8
 
   ;; don't make acceleration 0.1 since we could get a rounding error and end up on a patch boundary
   set acceleration 0.099
@@ -130,7 +141,7 @@ to setup-patches
     ;; road dividing the top half
     pycor = 9 or
     ;; residential road
-    ( pycor = -8 and pxcor >= 5 )
+    ( pycor = ycor-residential and pxcor >= min-xcor-residential )
   ]
   set intersections roads with [
     (pxcor = -6 and pycor = 0) or
@@ -205,11 +216,11 @@ to go
     ;; House patches can only be near Subdivision Drive.
     let house-candidates patches with [
       pcolor = 38 and any? neighbors with [ pcolor = white ] and
-      ( pycor = -7 or pycor = -9 ) and ( pxcor > 4 and pxcor < 17 )
+      ( pycor = ycor-residential + 1 or pycor = ycor-residential - 1 ) and ( pxcor >= min-xcor-residential and pxcor <= max-xcor-residential )
     ]
     let work-candidates patches with [
       pcolor = 38 and any? neighbors with [ pcolor = white ] and
-      not (( pycor = -7 or pycor = -9 ) and pxcor > 4)
+      ( pycor > 0 or pxcor < -6 )
     ]
 
     ;; Now create the cars and have each created car call the functions setup-cars and set-car-color
@@ -233,19 +244,23 @@ to go
   ask turtles [
     carefully [
       face next-patch ;; car heads towards its goal
+      ask house [ if pcolor != yellow [ set pcolor yellow ] ] ;; color the house patch yellow
+      ask work [ if pcolor != orange [ set pcolor orange ] ] ;; color the work patch orange
+      set-car-speed
+      fd speed
+      if not member? patch-here path [
+        set path ( patch-set path patch-here )
+      ]
+      record-data     ;; record data for plotting
+      set-car-color   ;; set color to indicate speed
     ] [
       die
     ]
     if (trips mod 2 = 0) and (trips / 2 = max-round-trips) [
+      ask house [ set pcolor brown + 3 ] ;; color patch back to brown
+      ask work [ set pcolor brown + 3 ]  ;; color patch back to brown
       die
     ]
-    set-car-speed
-    fd speed
-    if not member? patch-here path [
-      set path ( patch-set path patch-here )
-    ]
-    record-data     ;; record data for plotting
-    set-car-color   ;; set color to indicate speed
   ]
   label-subject ;; if we're watching a car, have it display its goal
   next-phase ;; update the phase and the global clock
@@ -410,15 +425,15 @@ to-report next-patch
     ( not member? self [ path ] of myself )
   ]
   ;; If it is the first trip of the car and it is going to work, avoid entering the residential road
-  if goal = work and trips = 0 and ( [pycor] of patch-here <= -7 and [pycor] of patch-here >= -9 ) and [pxcor] of patch-here = 18 [
-    set choices choices with [ not ( pxcor > 4 and pxcor < 18 ) ]
+  if goal = work and trips = 0 and ( [pycor] of patch-here <= ycor-residential + 1 and [pycor] of patch-here >= ycor-residential - 1 ) and [pxcor] of patch-here = 18 [
+    set choices choices with [ not ( pxcor >= min-xcor-residential and pxcor < max-xcor-residential + 2 ) ]
   ]
   ;; If the car was spawned on the residential road and it is the first trip to work, exit to the main road
-  if goal = work and trips = 0 and ( [pycor] of patch-here = -8 and ( [pxcor] of patch-here > 4 and [pxcor] of patch-here < 18 ) ) [
+  if goal = work and trips = 0 and ( [pycor] of patch-here = ycor-residential and ( [pxcor] of patch-here >= min-xcor-residential and [pxcor] of patch-here < max-xcor-residential + 2 ) ) [
     set choices choices with [ pxcor > [[ pxcor ] of patch-here] of myself ]
   ]
   ;; If the car has just gone home and will go back to work, exit to the main road.
-  if goal = work and trips > 0 and ( [pycor] of patch-here = -8 and ( [pxcor] of patch-here > 4 and [pxcor] of patch-here < 18 ) ) [
+  if goal = work and trips > 0 and ( [pycor] of patch-here = ycor-residential and ( [pxcor] of patch-here >= min-xcor-residential and [pxcor] of patch-here < max-xcor-residential + 2 ) ) [
     set choices choices with [ pxcor > [[ pxcor ] of patch-here] of myself ];;[ xcor ] of myself ]
   ]
   ;; If the car has already chosen a direction, continue towards that direction.
@@ -577,7 +592,7 @@ num-cars
 num-cars
 1
 400
-10.0
+38.0
 1
 1
 NIL
@@ -670,7 +685,7 @@ ticks-per-cycle
 ticks-per-cycle
 1
 100
-10.0
+30.0
 1
 1
 NIL
@@ -806,10 +821,10 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-555
-245
-680
-263
+530
+250
+690
+268
 Subdivision Drive
 9
 3.0
@@ -827,9 +842,9 @@ Circumferential Road
 
 TEXTBOX
 445
-10
+15
 690
-28
+33
 Circumferential Road
 9
 3.0
