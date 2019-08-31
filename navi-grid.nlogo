@@ -525,7 +525,7 @@ to-report next-patch
   ]
   ;; If the car has just gone home and will go back to work, exit to the main road.
   if goal = work and trips > 0 and ( ( [pycor] of patch-here <= ycor-residential + 1 and [pycor] of patch-here >= ycor-residential - 1 ) and ( [pxcor] of patch-here >= min-xcor-residential and [pxcor] of patch-here < max-xcor-residential + 2 ) ) [
-    set choices choices with [ pxcor > [[ pxcor ] of patch-here] of myself ];;[ xcor ] of myself ]
+    set choices choices with [ pxcor > [[ pxcor ] of patch-here] of myself ]
   ]
   ;; If the car has already chosen a direction, continue towards that direction.
   ;; This fixes the jittering behavior in the original model when neighbor patches are
@@ -653,7 +653,7 @@ PLOT
 445
 365
 660
-540
+510
 Average Wait Time of Cars
 Time
 Average Wait
@@ -671,7 +671,7 @@ PLOT
 230
 365
 446
-540
+510
 Average Speed of Cars
 Time
 Average Speed
@@ -715,7 +715,7 @@ PLOT
 15
 365
 230
-540
+510
 Stopped Cars
 Time
 Stopped Cars
@@ -934,9 +934,9 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-523
+515
 250
-688
+680
 268
 Subdivision Drive
 9
@@ -948,7 +948,7 @@ TEXTBOX
 340
 688
 358
-Circumferential Road
+Circumferential Road South
 9
 3.0
 1
@@ -958,7 +958,7 @@ TEXTBOX
 20
 683
 38
-Circumferential Road
+Circumferential Road North
 9
 3.0
 1
@@ -992,18 +992,18 @@ assisted
 assisted
 0
 1
-0.8
+0.5
 .1
 1
 NIL
 HORIZONTAL
 
 PLOT
-1025
-15
-1290
-420
-Average Maximum Travel Time of ALL Cars
+1100
+110
+1315
+290
+ALL Cars
 Time
 Ave Max Travel Time
 0.0
@@ -1027,20 +1027,20 @@ Navigation Application-Assisted Drivers
 1
 
 CHOOSER
-665
-15
-882
-60
+670
+35
+887
+80
 app-suggestion
 app-suggestion
 "Rand Street" "Wilensky Street" "Circumferential Road North" "Circumferential Road South"
-0
+3
 
 MONITOR
-880
-15
-1025
-60
+885
+35
+1030
+80
 Cars with Navigation
 count turtles with [ assisted? ]
 0
@@ -1048,13 +1048,13 @@ count turtles with [ assisted? ]
 11
 
 PLOT
-665
-60
-1025
-240
-Average Maximum Travel Time of ASSISTED Cars
+670
+110
+885
+290
+ASSISTED Cars
 Time
-AAve Max Travel Time
+Ave Max Travel Time
 0.0
 10.0
 0.0
@@ -1066,11 +1066,11 @@ PENS
 "default" 1.0 0 -2064490 true "" "plot mean [max-travel-time] of turtles with [assisted?]"
 
 PLOT
-665
-240
-1025
-420
-Average Maximum Travel Time of NON-ASSISTED Card
+885
+110
+1100
+290
+NON-ASSISTED Cars
 Time
 Ave Max Travel Time
 0.0
@@ -1083,24 +1083,118 @@ false
 PENS
 "default" 1.0 0 -13791810 true "" "plot mean [max-travel-time] of turtles with [assisted? = false]"
 
+TEXTBOX
+670
+15
+870
+41
+Navigation Assistance Controls
+12
+15.0
+1
+
+TEXTBOX
+670
+90
+875
+116
+Average Maximum Travel Times
+12
+15.0
+1
+
+PLOT
+670
+325
+990
+510
+Rand Street
+Number of cars
+Time
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -5825686 true "" "plot count turtles with [ [pycor] of patch-here = 0 and [pxcor] of patch-here < 18 and [pxcor] of patch-here > -6 ]"
+
+PLOT
+990
+325
+1315
+510
+Wilensky Street
+Number of cars
+Time
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -2064490 true "" "plot count turtles with [ [pycor] of patch-here = 9 and [pxcor] of patch-here < 18 and [pxcor] of patch-here > -6 ]"
+
+TEXTBOX
+670
+305
+820
+323
+Car volume per street
+12
+15.0
+1
+
+PLOT
+990
+510
+1315
+695
+Circumferential Road North
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -5825686 true "" "plot count turtles with [ [pycor] of patch-here = 18 and [pxcor] of patch-here < 18 and [pxcor] of patch-here > -6 ]"
+
+PLOT
+670
+510
+990
+695
+Circumferential Road South
+Number of cars
+Time
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -2064490 true "" "plot count turtles with [ [pycor] of patch-here = -18 and [pxcor] of patch-here < 18 and [pxcor] of patch-here > -6 ]"
+
 @#$#@#$#@
 ## ACKNOWLEDGMENT
 
-This model is from Chapter Five of the book "Introduction to Agent-Based Modeling: Modeling Natural, Social and Engineered Complex Systems with NetLogo", by Uri Wilensky & William Rand.
-
-* Wilensky, U. & Rand, W. (2015). Introduction to Agent-Based Modeling: Modeling Natural, Social and Engineered Complex Systems with NetLogo. Cambridge, MA. MIT Press.
-
-This model is in the IABM Textbook folder of the NetLogo Models Library. The model, as well as any updates to the model, can also be found on the textbook website: http://www.intro-to-abm.com/.
-
-## ERRATA
-
-The code for this model differs somewhat from the code in the textbook. The textbook code calls the STAY procedure, which is not defined here. One of our suggestions in the "Extending the model" section below does, however, invite you to write a STAY procedure.
+This model is derived from the **Traffic Grid Goal** model from the Models Library, by Uri Wilensky & William Rand. 
 
 ## WHAT IS IT?
 
-The Traffic Grid Goal model simulates traffic moving in a city grid. It allows you to control traffic lights and global variables, such as the speed limit and the number of cars, and explore traffic dynamics.
+The **Navigation Application-Assisted Drivers** model simulates cars moving in a city with a fraction of them being assisted by a navigation application. It aims to explore how the number of drivers that use navigation applications affect the overall performance of a road network. In particular, whether the suggestions of these navigation applications really bring their users to their destinations faster, and how it affects the travel times of other drivers that don’t use them at all. 
 
-This model extends the Traffic Grid model by giving the cars goals, namely to drive to and from work. It is the third in a series of traffic models that use different kinds of agent cognition. The agents in this model use goal-based cognition.
+It allows you to define the number of cars and a fraction of them using a navigation application, control the traffic lights like in the original model, control the suggestion of the navigation application, observe the traffic dynamics, and monitor the travel times between assisted and non-assisted cars. Like the original model, the car agents use goal-based cognition to drive to and from work. 
 
 ## HOW IT WORKS
 
@@ -1159,48 +1253,6 @@ STOPPED CARS -- displays the number of stopped cars over time.
 AVERAGE SPEED OF CARS -- displays the average speed of cars over time.
 
 AVERAGE WAIT TIME OF CARS -- displays the average time cars are stopped over time.
-
-## THINGS TO NOTICE
-
-How is this model different than the Traffic Grid model? The one thing you may see at first glance is that cars move in all directions instead of only left to right and top to bottom. You will probably agree that this looks much more realistic.
-
-Another thing to notice is that, sometimes, cars get stuck: as explained in the book this is because the cars are mesuring the distance to their goals "as the bird flies", but reaching the goal sometimes require temporarily moving further from it (to get around a corner, for instance). A good way to witness that is to try the WATCH A CAR button until you find a car that is stuck. This situation could be prevented if the agents were more cognitively sophisticated. Do you think that it could also be avoided if the streets were layed out in a pattern different from the current one?
-
-## THINGS TO TRY
-
-You can change the "granularity" of the grid by using the GRID-SIZE-X and GRID-SIZE-Y sliders. Do cars get stuck more often with bigger values for GRID-SIZE-X and GRID-SIZE-Y, resulting in more streets, or smaller values, resulting in less streets? What if you use a big value for X and a small value for Y?
-
-In the original Traffic Grid model from the model library, removing the traffic lights (by setting the POWER? switch to Off) quickly resulted in gridlock. Try it in this version of the model. Do you see a gridlock happening? Why do you think that is? Do you think it is more realistic than in the original model?
-
-## EXTENDING THE MODEL
-
-Can you improve the efficiency of the cars in their commute? In particular, can you think of a way to avoid cars getting "stuck" like we noticed above? Perhaps a simple rule like "don't go back to the patch you were previously on" would help. This should be simple to implement by giving the cars a (very) short term memory: something like a `previous-patch` variable that would be checked at the time of choosing the next patch to move to. Does it help in all situations? How would you deal with situations where the cars still get stuck?
-
-Can you enable the cars to stay at home and work for some time before leaving? This would involve writing a STAY procedure that would be called instead moving the car around if the right condition is met (i.e., if the car has reached its current goal).
-
-At the moment, only two of the four arms of each intersection have traffic lights on them. Having only two lights made sense in the original Traffic Grid model because the streets in that model were one-way streets, with traffic always flowing in the same direction. In our more complex model, cars can go in all directions, so it would be better if all four arms of the intersection had lights. What happens if you make that modification? Is the flow of traffic better or worse?
-
-## RELATED MODELS
-
-- "Traffic Basic": a simple model of the movement of cars on a highway.
-
-- "Traffic Basic Utility": a version of "Traffic Basic" including a utility function for the cars.
-
-- "Traffic Basic Adaptive": a version of "Traffic Basic" where cars adapt their acceleration to try and maintain a smooth flow of traffic.
-
-- "Traffic Basic Adaptive Individuals": a version of "Traffic Basic Adaptive" where each car adapts individually, instead of all cars adapting in unison.
-
-- "Traffic 2 Lanes": a more sophisticated two-lane version of the "Traffic Basic" model.
-
-- "Traffic Intersection": a model of cars traveling through a single intersection.
-
-- "Traffic Grid": a model of traffic moving in a city grid, with stoplights at the intersections.
-
-- "Gridlock HubNet": a version of "Traffic Grid" where students control traffic lights in real-time.
-
-- "Gridlock Alternate HubNet": a version of "Gridlock HubNet" where students can enter NetLogo code to plot custom metrics.
-
-The traffic models from chapter 5 of the IABM textbook demonstrate different types of cognitive agents: "Traffic Basic Utility" demonstrates _utility-based agents_, "Traffic Grid Goal" demonstrates _goal-based agents_, and "Traffic Basic Adaptive" and "Traffic Basic Adaptive Individuals" demonstrate _adaptive agents_.
 
 ## HOW TO CITE
 
