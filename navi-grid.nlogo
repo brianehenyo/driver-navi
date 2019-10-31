@@ -705,7 +705,7 @@ num-cars
 num-cars
 1
 400
-99.0
+98.0
 1
 1
 NIL
@@ -813,7 +813,7 @@ current-phase
 current-phase
 0
 99
-1.0
+0.0
 1
 1
 %
@@ -992,7 +992,7 @@ assisted
 assisted
 0
 1
-0.5
+0.8
 .1
 1
 NIL
@@ -1034,7 +1034,7 @@ CHOOSER
 app-suggestion
 app-suggestion
 "Rand Street" "Wilensky Street" "Circumferential Road North" "Circumferential Road South"
-3
+0
 
 MONITOR
 885
